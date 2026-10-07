@@ -5,73 +5,34 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
-
+use App\Http\Controllers\StudentController;
 Route::get('/', function () {
     return view('welcome');
 });
 
 /* ---------------- STUDENTS ---------------- */
 
-Route::get('/students', function () {
-    $students = Student::all();
-    return view('student.list', ['students' => $students]);
-})->name('students.index');
+Route::get('/students', [StudentController::class, 'index'])
+    ->name('students.index');
 
 // must come BEFORE /students/{id}
-Route::get('/students/create', function () {
-    return view('student.create');
-})->name('students.create');
+Route::get('/students/create', [StudentController::class, 'create'])
+    ->name('students.create');
 
-Route::post('/students', function (Request $request) {
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|max:255|unique:students,email',
-        'phone' => 'required|string|max:20',
-        'address' => 'nullable|string|max:500',
-        'date_of_birth' => 'nullable|date',
-    ]);
+Route::post('/students', [StudentController::class, 'store'])
+    ->name('students.store');
 
-    $student = Student::create($validated);
+Route::get('/students/{id}', [StudentController::class, 'show'])
+    ->name('students.show');
 
-    return redirect()->route('students.index')
-        ->with('success', "Student {$student->name} created successfully!");
-})->name('students.store');
+Route::get('/students/{id}/edit', [StudentController::class, 'edit'])
+    ->name('students.edit');
 
-Route::get('/students/{id}', function ($id) {
-    $student = Student::findOrFail($id);
-    return view('student.detail', ['student' => $student]);
-})->name('students.show');
+Route::put('/students/{id}', [StudentController::class, 'update'])
+    ->name('students.update');
 
-Route::get('/students/{id}/edit', function ($id) {
-    $student = Student::findOrFail($id);
-    return view('student.edit', ['student' => $student]);
-})->name('students.edit');
-
-Route::put('/students/{id}', function (Request $request, $id) {
-    $student = Student::findOrFail($id);
-
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => ['required', 'email', 'max:255',
-            Rule::unique('students')->ignore($student->id)],
-        'phone' => 'required|string|max:20',
-        'address' => 'nullable|string|max:500',
-        'date_of_birth' => 'nullable|date',
-    ]);
-
-    $student->update($validated);
-
-    return redirect()->route('students.show', $student->id)
-        ->with('success', 'Student updated successfully!');
-})->name('students.update');
-
-Route::delete('/students/{id}', function ($id) {
-    $student = Student::findOrFail($id);
-    $student->delete();
-
-    return redirect()->route('students.index')
-        ->with('success', 'Student deleted successfully!');
-})->name('students.destroy');
+Route::delete('/students/{id}', [StudentController::class, 'destroy'])
+    ->name('students.destroy');
 
 /* ---------------- COURSES ---------------- */
 
