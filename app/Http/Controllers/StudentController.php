@@ -2,71 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreStudentRequest;
+use App\Http\Requests\UpdateStudentRequest;
 use App\Models\Student;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class StudentController extends Controller
 {
     public function index()
     {
-        $students = Student::all();
-
         return view('student.list', [
-            'students' => $students,
+            'students' => Student::all(),
         ]);
     }
 
-    public function show(Student $student)
-    {
-        return view('student.detail', [
-            'student' => $student,
-        ]);
-    }
     public function create()
     {
         return view('student.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreStudentRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:students,email',
-            'phone' => 'required|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'date_of_birth' => 'nullable|date',
-        ]);
+        $student = Student::create($request->validated());
 
-        $student = Student::create($validated);
-
-        return redirect()->route('students.index')
+        return redirect()
+            ->route('students.index')
             ->with('success', "Student {$student->name} created successfully!");
     }
-    public function edit(Student $student)
+
+    public function show(Student $student)
     {
-        return view('student.edit', [
-            'student' => $student,
-        ]);
+        return view('student.detail', ['student' => $student]);
     }
 
-
-    public function update(Request $request, Student $student)
+    public function edit(Student $student)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('students')->ignore($student->id),
-            ],
-            'phone' => 'required|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'date_of_birth' => 'nullable|date',
-        ]);
+        return view('student.edit', ['student' => $student]);
+    }
 
-        $student->update($validated);
+    public function update(UpdateStudentRequest $request, Student $student)
+    {
+        $student->update($request->validated());
 
         return redirect()
             ->route('students.show', $student)
