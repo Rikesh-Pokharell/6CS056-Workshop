@@ -44,5 +44,37 @@ class StudentController extends Controller
 
         return redirect()->route('students.index')
             ->with('success', "Student {$student->name} created successfully!");
+    }
+    public function edit($id)
+    {
+        $student = Student::findOrFail($id);
+
+        return view('student.edit', [
+            'student' => $student,
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $student = Student::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('students')->ignore($student->id),
+            ],
+            'phone' => 'required|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'date_of_birth' => 'nullable|date',
+        ]);
+
+        $student->update($validated);
+
+        return redirect()
+            ->route('students.show', $student->id)
+            ->with('success', 'Student updated successfully!');
     }//
 }
